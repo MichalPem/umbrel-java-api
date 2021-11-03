@@ -30,18 +30,18 @@ public class UmbrelApi
 		this.host = host;
 	}
 
-	private List<Block> getBlockDetails(LoginResponseDto loginResponseDto, Integer from, Integer to) throws IOException
+	public List<Block> getBlockDetails(LoginResponseDto loginResponseDto, Integer from, Integer to) throws IOException
 	{
 		String fromto = "?from=" + from + "&to=" + to;
 		return mapper.readValue(call(host + BLOCK_DETAILS_URL + fromto, "GET", loginResponseDto.jwt, null), Blocks.class).blocks;
 	}
 
-	private Float getTemperature(LoginResponseDto loginResponseDto) throws IOException
+	public Float getTemperature(LoginResponseDto loginResponseDto) throws IOException
 	{
 		return Float.parseFloat(call(host + TEMPERATURE,"GET", loginResponseDto.jwt, null));
 	}
 
-	private Integer getUptime(LoginResponseDto loginResponseDto) throws IOException
+	public Integer getUptime(LoginResponseDto loginResponseDto) throws IOException
 	{
 		return Integer.parseInt(call(host + UPTIME,"GET", loginResponseDto.jwt, null));
 	}
@@ -57,7 +57,7 @@ public class UmbrelApi
 				.readValue(call(host + LOGIN_URL, "POST", null, mapper.writeValueAsString(new LoginDto(password))), LoginResponseDto.class);
 	}
 
-	private SyncResponseDto getSync(LoginResponseDto login) throws IOException
+	public SyncResponseDto getSync(LoginResponseDto login) throws IOException
 	{
 		return mapper.readValue(call(host + SYNC_URL, "GET", login.jwt, null), SyncResponseDto.class);
 	}
