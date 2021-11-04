@@ -1,7 +1,7 @@
 **Java wrapper for Umbrel API**
 https://github.com/getumbrel
 
-**Uage:**
+**Usage:**
 
 ```
 UmbrelApi umbrelApi = new UmbrelApi(host);
