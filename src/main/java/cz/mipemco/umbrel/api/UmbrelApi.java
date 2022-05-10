@@ -1,18 +1,16 @@
 package cz.mipemco.umbrel.api;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import cz.mipemco.umbrel.api.dto.*;
 
 import java.io.*;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 /**
  * @author Michal Pemčák
  */
-public class UmbrelApi
+public class UmbrelApi extends Api
 {
 
 	private static final String LOGIN_URL = "/manager-api/v1/account/login";
@@ -21,6 +19,8 @@ public class UmbrelApi
 	private static final String TEMPERATURE = "/manager-api/v1/system/temperature";
 	private static final String UPTIME = "/manager-api/v1/system/uptime";
 	private static final String REBOOT = "/manager-api/v1/system/reboot";
+	private static final String CHANNELS = "/api/v1/lnd/channel";
+	private static final String STATS = "/api/v1/bitcoind/info/stats";
 
 	private final ObjectMapper mapper = new ObjectMapper();
 	private final String host;
@@ -46,6 +46,16 @@ public class UmbrelApi
 		return Integer.parseInt(call(host + UPTIME,"GET", loginResponseDto.jwt, null));
 	}
 
+	public List<ChannelsDto> getChannels(LoginResponseDto loginResponseDto) throws IOException
+	{
+		return mapper.readValue(call(host + CHANNELS,"GET",loginResponseDto.jwt,null),new TypeReference<List<ChannelsDto>>(){});
+	}
+
+	public Stats getStats(LoginResponseDto loginResponseDto) throws IOException
+	{
+		return mapper.readValue(call(host + STATS,"GET",loginResponseDto.jwt,null),Stats.class);
+	}
+
 	public Integer rebootUmbrel(LoginResponseDto loginResponseDto) throws IOException
 	{
 		return Integer.parseInt(call(host + REBOOT,"POST", loginResponseDto.jwt, null));
@@ -62,49 +72,5 @@ public class UmbrelApi
 		return mapper.readValue(call(host + SYNC_URL, "GET", login.jwt, null), SyncResponseDto.class);
 	}
 
-	private String call(String url, String method, String login, String body) throws IOException
-	{
 
-		URL u = new URL(url);
-		HttpURLConnection httpCon = (HttpURLConnection) u.openConnection();
-		httpCon.setRequestMethod(method);
-		setHeader(httpCon);
-		if (login != null)
-		{
-			httpCon.setRequestProperty("Authorization", "JWT " + login);
-		}
-		if (body != null)
-		{
-			httpCon.setDoOutput(true);
-			OutputStream os = httpCon.getOutputStream();
-			OutputStreamWriter osw = new OutputStreamWriter(os, StandardCharsets.UTF_8);
-			osw.write(body);
-			osw.flush();
-			osw.close();
-			os.close();  //don't forget to close the OutputStream
-		}
-		httpCon.connect();
-
-		//read the inputstream and print it
-		String result;
-		BufferedInputStream bis = new BufferedInputStream(httpCon.getInputStream());
-		ByteArrayOutputStream buf = new ByteArrayOutputStream();
-		int result2 = bis.read();
-		while (result2 != -1)
-		{
-			buf.write((byte) result2);
-			result2 = bis.read();
-		}
-		result = buf.toString();
-		return result;
-
-	}
-
-	private void setHeader(HttpURLConnection httpCon)
-	{
-		httpCon.setRequestProperty("Accept", "application/json, text/plain, */*");
-		httpCon.setRequestProperty("Content-Type", "application/json;charset=UTF-8");
-		httpCon.setRequestProperty("Origin", "http://umbrel.local");
-		httpCon.setRequestProperty("DNT", "1");
-	}
 }
